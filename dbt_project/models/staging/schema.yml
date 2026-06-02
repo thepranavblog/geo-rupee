@@ -3,6 +3,8 @@ version: 2
 sources:
   - name: s3_silver
     description: "Spark-enriched correlated events from S3 silver layer"
+    meta:
+      external_location: "read_parquet('s3://geo-rupee-pipeline/silver/correlated/**/*.parquet')"
     tables:
       - name: correlated
         description: "One row per event with rupee movement metrics"
@@ -12,8 +14,12 @@ sources:
     tables:
       - name: gdelt_raw
         description: "Raw GDELT events"
+        meta:
+          external_location: "read_parquet('s3://geo-rupee-pipeline/bronze/gdelt-raw/**/*.parquet')"
       - name: market_raw
         description: "Raw Yahoo Finance ticks"
+        meta:
+          external_location: "read_parquet('s3://geo-rupee-pipeline/bronze/market-raw/**/*.parquet')"
 
 models:
   - name: stg_geopolitical_events

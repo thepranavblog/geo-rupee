@@ -31,7 +31,7 @@ with DAG(
 
     check_silver_data_exists = S3KeySensor(
         task_id="check_silver_data_exists",
-        bucket_name="geopolitical-rupee-pipeline",
+        bucket_name="geo-rupee-pipeline",
         bucket_key="silver/correlated/date={{ ds }}/",
         timeout=600,
         poke_interval=60,
