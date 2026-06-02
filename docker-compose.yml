@@ -156,7 +156,7 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./data:/data
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     deploy:
@@ -177,7 +177,7 @@ services:
       - ./dbt_project:/dbt_project
       - ./data:/data
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
@@ -200,7 +200,7 @@ services:
       - ./dbt_project:/dbt_project
       - ./data:/data
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
