@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 import duckdb
@@ -16,11 +17,17 @@ class GeopoliticalDashboard:
         self.connection = None
         self.date_range_days = DEFAULT_DATE_RANGE_DAYS
 
-    def connect_duckdb(self):
+    def connect_duckdb(self) -> bool:
+        if not os.path.exists(self.duckdb_path):
+            return False
         self.connection = duckdb.connect(self.duckdb_path, read_only=True)
+        return True
 
     def _query(self, sql: str, days: int) -> pd.DataFrame:
-        return self.connection.execute(sql.format(days=days)).df()
+        try:
+            return self.connection.execute(sql.format(days=days)).df()
+        except Exception:
+            return pd.DataFrame()
 
     def load_kpis(self, days: int) -> dict:
         df = self._query(KPI_QUERY, days)
@@ -153,7 +160,9 @@ class GeopoliticalDashboard:
             st.header("Filters")
             days = st.slider("Date range (days)", min_value=1, max_value=365, value=DEFAULT_DATE_RANGE_DAYS)
 
-        self.connect_duckdb()
+        if not self.connect_duckdb():
+            st.warning("Waiting for data — the pipeline is starting up. The dashboard will refresh automatically once the DuckDB warehouse is ready.")
+            return
 
         kpis = self.load_kpis(days)
         cameo_df = self.load_cameo_data(days)
