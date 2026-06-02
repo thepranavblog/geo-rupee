@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: int_correlated_events
+    description: "Wide join of event + market movement data, one row per event"
+    columns:
+      - name: event_id
+        tests:
+          - not_null

@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: fact_correlation
+    description: "One row per geopolitical event with rupee movement metrics"
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: goldstein_score
+        tests:
+          - not_null
+      - name: country_key
+        tests:
+          - not_null
+      - name: event_type_key
+        tests:
+          - not_null
+
+  - name: dim_country
+    description: "Country dimension with region and India trade partner flag"
+    columns:
+      - name: country_key
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_event_type
+    description: "CAMEO event type dimension with human-readable labels"
+    columns:
+      - name: event_type_key
+        tests:
+          - unique
+          - not_null

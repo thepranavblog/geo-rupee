@@ -1,0 +1,4 @@
+kafka-python==2.0.2
+yfinance==0.2.40
+pandas==2.2.2
+requests==2.31.0

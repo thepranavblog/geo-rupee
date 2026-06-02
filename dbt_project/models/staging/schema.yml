@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: s3_silver
+    description: "Spark-enriched correlated events from S3 silver layer"
+    tables:
+      - name: correlated
+        description: "One row per event with rupee movement metrics"
+
+  - name: s3_bronze
+    description: "Raw Kafka messages from S3 bronze layer"
+    tables:
+      - name: gdelt_raw
+        description: "Raw GDELT events"
+      - name: market_raw
+        description: "Raw Yahoo Finance ticks"
+
+models:
+  - name: stg_geopolitical_events
+    description: "Clean deduplicated geopolitical events from silver"
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+
+  - name: stg_market_movement
+    description: "Clean deduplicated rupee movement from silver (events with market data only)"
+    columns:
+      - name: event_id
+        tests:
+          - not_null
