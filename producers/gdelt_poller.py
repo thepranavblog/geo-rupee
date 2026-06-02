@@ -21,19 +21,20 @@ from config import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-# GDELT column indices (tab-separated, no header)
+# GDELT 2.0 column indices (tab-separated, no header, 61 columns total)
+# Codebook: https://www.gdeltproject.org/data/documentation/GDELT-Event_Codebook-V2.0.pdf
 GDELT_COLS = {
-    0: "event_id",
-    1: "sql_date",
-    7: "actor1_country",
+    0:  "event_id",
+    1:  "sql_date",
+    7:  "actor1_country",
     17: "actor2_country",
-    26: "cameo_code",
-    27: "cameo_root_code",
+    26: "cameo_code",       # EventCode: full CAMEO code e.g. "0431"
+    28: "cameo_root_code",  # EventRootCode: 2-digit root e.g. "04" (was wrongly col 27 = EventBaseCode)
     30: "goldstein_score",
     31: "num_mentions",
     33: "num_articles",
     34: "avg_tone",
-    59: "date_added",
+    59: "date_added",       # DATEADDED: YYYYMMDDHHMMSS (col 59 in the live 61-column schema)
 }
 
 
