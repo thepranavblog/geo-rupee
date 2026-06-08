@@ -55,6 +55,7 @@ class GeopoliticalMarketStreamJob:
             .option("kafka.bootstrap.servers", self.kafka_bootstrap_servers)
             .option("subscribe", self.event_topic)
             .option("startingOffsets", "latest")
+            .option("failOnDataLoss", "false")
             .load()
         )
         parsed = (
@@ -75,6 +76,7 @@ class GeopoliticalMarketStreamJob:
             .option("kafka.bootstrap.servers", self.kafka_bootstrap_servers)
             .option("subscribe", self.market_topic)
             .option("startingOffsets", "latest")
+            .option("failOnDataLoss", "false")
             .load()
         )
         parsed = (
@@ -86,7 +88,8 @@ class GeopoliticalMarketStreamJob:
 
     def join_streams(self, event_stream: DataFrame, market_stream: DataFrame) -> DataFrame:
         join_condition = (
-            (market_stream["timestamp"] >= event_stream["event_timestamp"])
+            (F.to_date(market_stream["timestamp"]) == F.to_date(event_stream["event_timestamp"]))
+            & (market_stream["timestamp"] >= event_stream["event_timestamp"])
             & (market_stream["timestamp"] <= event_stream["event_timestamp"] + F.expr(f"INTERVAL {JOIN_WINDOW_DURATION}"))
         )
         return event_stream.join(market_stream, join_condition, "left_outer")
@@ -162,13 +165,14 @@ class GeopoliticalMarketStreamJob:
         )
 
     def write_silver(self, enriched_stream: DataFrame):
+        # State store uses local disk to avoid S3 403 errors from rename-based checkpoint manager
         (
             enriched_stream
             .withColumn("date", F.to_date("event_timestamp"))
             .writeStream
             .format("parquet")
             .option("path", self.s3_output_path)
-            .option("checkpointLocation", f"{self.checkpoint_path}correlated/")
+            .option("checkpointLocation", "/tmp/spark-checkpoints/correlated/")
             .partitionBy("date")
             .trigger(processingTime=TRIGGER_INTERVAL)
             .outputMode("append")
@@ -180,9 +184,13 @@ class GeopoliticalMarketStreamJob:
         event_stream = self.read_event_stream()
         market_stream = self.read_market_stream()
         self.write_bronze(event_stream, market_stream)
-        joined = self.join_streams(event_stream, market_stream)
-        enriched = self.enrich(joined)
-        self.write_silver(enriched)
+        try:
+            joined = self.join_streams(event_stream, market_stream)
+            enriched = self.enrich(joined)
+            self.write_silver(enriched)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Silver stream failed to start, running bronze only: {e}")
         self.spark_session.streams.awaitAnyTermination()
 
 

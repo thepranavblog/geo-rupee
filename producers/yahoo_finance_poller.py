@@ -1,9 +1,9 @@
 import json
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
-import yfinance as yf
+import requests
 from kafka import KafkaProducer
 
 from config import (
@@ -29,18 +29,28 @@ class YahooFinancePoller:
 
     def fetch_latest_tick(self) -> dict | None:
         try:
-            ticker = yf.Ticker(self.symbol)
-            hist = ticker.history(period="1d", interval="1m")
-            if hist.empty:
+            url = (
+                f"https://query1.finance.yahoo.com/v8/finance/chart/{self.symbol}"
+                "?interval=1m&range=1d"
+            )
+            resp = requests.get(
+                url,
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            result = data["chart"]["result"]
+            if not result:
                 log.info("No data returned (market may be closed)")
                 return None
-            latest = hist.iloc[-1]
-            ts = hist.index[-1]
+            meta = result[0]["meta"]
+            ts = datetime.fromtimestamp(meta["regularMarketTime"], tz=timezone.utc)
             return {
                 "symbol": self.symbol,
                 "timestamp": ts.isoformat(),
-                "close": float(latest["Close"]),
-                "volume": int(latest["Volume"]) if latest["Volume"] else 0,
+                "close": float(meta["regularMarketPrice"]),
+                "volume": int(meta.get("regularMarketVolume", 0)),
             }
         except Exception as e:
             log.error(f"Failed to fetch ticker data: {e}")
